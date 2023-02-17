@@ -6,9 +6,10 @@ void Game::initVariables()
 
 	// GAME LOGIC
 	this->points = 0;
-	this->enemySpawmTimerMax = 1000.f;
+	this->enemySpawmTimerMax = 10.f;
 	this->enemySpawnTimer = this->enemySpawmTimerMax;
-	this->maxEnemies = 5;
+	this->maxEnemies = 10;
+	this->mouseHeld = false;
 }
 
 void Game::initWindow()
@@ -19,6 +20,17 @@ void Game::initWindow()
 	this->window = new sf::RenderWindow(this->videoMode, "FIRST Game done by KOBIELAP", sf::Style::Titlebar | sf::Style::Close);
 
 	this->window->setFramerateLimit(60);
+}
+
+void Game::initEnemies()
+{
+	this->enemy.setPosition(sf::Vector2f(10.f, 10.f));
+	this->enemy.setSize(sf::Vector2f(100.f, 100.f));
+	this->enemy.setScale(sf::Vector2f(0.5f, 0.5f));
+	this->enemy.setFillColor(sf::Color::Green);
+	//this->enemy.setOutlineColor(sf::Color::Red);
+	//this->enemy.setOutlineThickness(2.f);
+
 }
 
 Game::Game()
@@ -39,14 +51,14 @@ void Game::spawnEnemy()
 	/*
 		@return void
 	
-		Spawns enemies and setrs their color and positions.
+		Spawns enemies and sets their color and positions.
 		- Sets a random position.
 		- Sets a random color.
 		- Adds enemy to the vector.
 
 		Tworzenie przeciwników ustawianie koloru oraz pozycji.
 		- Ustawienie pozycji jako random
-		- Ustawienie koloru
+		- Ustawienie koloru jako random
 		- Dodanie przeciwnika do vector'a
 
 	*/
@@ -55,7 +67,7 @@ void Game::spawnEnemy()
 		0.f
 	);
 	
-	this->enemy.setFillColor(sf::Color::Red);
+	this->enemy.setFillColor(sf::Color::Green);
 
 	this->enemies.push_back(this->enemy);
 }
@@ -70,6 +82,7 @@ void Game::updateMousePositions()
 	*/
 
 	this->mousePosWindow = sf::Mouse::getPosition(*this->window);
+	this->mousePosView = this->window->mapPixelToCoords(this->mousePosWindow);
 }
 
 void Game::updateEnemies()
@@ -103,9 +116,37 @@ void Game::updateEnemies()
 	}
 
 	//Move the enemies
-	for (auto& e : this->enemies)
+	//for (auto& e : this->enemies)
+
+	//Moving and updateing enemies
+	for (int i = 0; i < this->enemies.size(); i++)
 	{
-		e.move(0.f, 1.f);
+		bool deleted = false;
+		
+		this->enemies[i].move(0.f, 3.f);
+//=========================================================
+		// Check if clicked upon
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+		{
+			if (this->enemies[i].getGlobalBounds().contains(this->mousePosView));
+			{
+				deleted = true;
+			
+				//Gain points
+				this->points += 10.f;
+			}
+		}
+
+		// if enemy is past the bottom of the screen
+		if (this->enemies[i].getPosition().y > this->window->getSize().y)
+		{
+			deleted = true;
+		}
+
+		//Final delete
+		if (deleted)
+			this->enemies.erase(this->enemies.begin() + i);
+//==========================================================
 	}
 
 }
@@ -164,16 +205,7 @@ void Game::render()
 	this->window->display();
 }
 
-void Game::initEnemies()
-{
-	this->enemy.setPosition(sf::Vector2f(10.f, 10.f));
-	this->enemy.setSize(sf::Vector2f(100.f, 100.f));
-	this->enemy.setScale(sf::Vector2f(0.5f, 0.5f));
-	this->enemy.setFillColor(sf::Color::Green);
-	this->enemy.setOutlineColor(sf::Color::Red);
-	this->enemy.setOutlineThickness(2.f);
 
-}
 
 const bool Game::windowIsRunning() const
 {

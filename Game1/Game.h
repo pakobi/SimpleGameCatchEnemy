@@ -33,12 +33,14 @@ private:
 
 	// Mouse postions
 	sf::Vector2i mousePosWindow;
+	sf::Vector2f mousePosView;
 
 	// Logika gry/ GAME LOGIC
-	int points;
+	unsigned points;
 	float enemySpawnTimer;
 	float enemySpawmTimerMax;
 	int maxEnemies;
+	bool mouseHeld;	// sprawdzenie czy klawisz myszki jest held down/przytrzymany 
 	
 
 	// Obiekty Gry/Game objects
