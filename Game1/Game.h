@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <ctime>
+#include <sstream>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
@@ -35,12 +36,18 @@ private:
 	sf::Vector2i mousePosWindow;
 	sf::Vector2f mousePosView;
 
+	// Resources
+	sf::Font font;
+	sf::Text uiText;
+
 	// Logika gry/ GAME LOGIC
 	unsigned points;
 	float enemySpawnTimer;
 	float enemySpawmTimerMax;
 	int maxEnemies;
 	bool mouseHeld;	// sprawdzenie czy klawisz myszki jest held down/przytrzymany 
+	int health; // liczba ¿yæ
+	bool endGame; // znacznik koñca gry
 	
 
 	// Obiekty Gry/Game objects
@@ -52,6 +59,9 @@ private:
 	void initVariables();
 	void initWindow();
 	void initEnemies();
+	void initFonts();
+	void initText();
+
 
 public:
 	//Konstruktor /Destruktor
@@ -60,14 +70,18 @@ public:
 
 	//Akcesoria
 	const bool windowIsRunning() const;
+	const bool getEndGame() const;
 
 	//Funkcje
 	void poolEvents();
 	void updateMousePositions();
 	void update();
+	void updateText();
 	void updateEnemies();
+
 	void render();
-	void renderEnemies();
+	void renderText(sf::RenderTarget& target);
+	void renderEnemies(sf::RenderTarget& target);
 	void spawnEnemy();
 };
 

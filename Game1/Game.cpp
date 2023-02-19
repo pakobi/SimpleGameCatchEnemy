@@ -5,7 +5,9 @@ void Game::initVariables()
 	this->window = nullptr;
 
 	// GAME LOGIC
+	this->endGame = false;
 	this->points = 0;
+	this->health = 10;
 	this->enemySpawmTimerMax = 10.f;
 	this->enemySpawnTimer = this->enemySpawmTimerMax;
 	this->maxEnemies = 10;
@@ -37,7 +39,25 @@ Game::Game()
 {
 	this->initVariables();
 	this->initWindow();
+	this->initFonts();
+	this->initText();
 	this->initEnemies();
+}
+
+void Game::initFonts()
+{
+	if (this->font.loadFromFile("Fonts/Dosis-Light.ttf"))
+	{
+		std::cout << "ERROR::GAME::INITFONTS::Failed to load font!" << "\n";
+	}
+}
+
+void Game::initText()
+{
+	this->uiText.setFont(this->font);
+	this->uiText.setCharacterSize(24);
+	this->uiText.setFillColor(sf::Color::White);
+	this->uiText.setString("No Description Yet");
 }
 
 Game::~Game()
@@ -70,6 +90,21 @@ void Game::spawnEnemy()
 	this->enemy.setFillColor(sf::Color::Green);
 
 	this->enemies.push_back(this->enemy);
+}
+
+void Game::updateText()
+{
+	std::stringstream ss;
+
+	ss << "Points: " << this->points << "\n"
+		<< "Health: " << this->health << "\n";
+	
+	this->uiText.setString(ss.str());
+}
+
+void Game::renderText(sf::RenderTarget& target)
+{
+	target.draw(this->uiText);
 }
 
 void Game::updateMousePositions()
@@ -115,40 +150,47 @@ void Game::updateEnemies()
 			this->enemySpawnTimer += 1.f;
 	}
 
-	//Move the enemies
-	//for (auto& e : this->enemies)
-
 	//Moving and updateing enemies
 	for (int i = 0; i < this->enemies.size(); i++)
 	{
 		bool deleted = false;
-		
+
 		this->enemies[i].move(0.f, 3.f);
-//=========================================================
-		// Check if clicked upon
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-		{
-			if (this->enemies[i].getGlobalBounds().contains(this->mousePosView));
-			{
-				deleted = true;
-			
-				//Gain points
-				this->points += 10.f;
-			}
-		}
 
 		// if enemy is past the bottom of the screen
 		if (this->enemies[i].getPosition().y > this->window->getSize().y)
 		{
-			deleted = true;
-		}
-
-		//Final delete
-		if (deleted)
 			this->enemies.erase(this->enemies.begin() + i);
-//==========================================================
+			this->health -= 1;
+			std::cout << "Health: " << this->health << "\n";
+		}
 	}
-
+//=========================================================
+	// Check if clicked upon
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	{
+		if (this->mouseHeld == false)
+		{
+			this->mouseHeld = true;
+			bool deleted = false;
+			for (size_t i = 0; i < this->enemies.size() && deleted == false; i++)
+			{
+				if (this->enemies[i].getGlobalBounds().contains(this->mousePosView));
+				{
+					//delete the enemy
+					deleted = true;
+					this->enemies.erase(this->enemies.begin() + i);
+					//Gain points
+					this->points += 1;
+					std::cout << "Points: " << this->points << "\n";
+				}
+			}
+		}
+	}
+	else
+	{
+		this->mouseHeld = false;
+	}
 }
 
 void Game::update()
@@ -158,10 +200,18 @@ void Game::update()
 	// Update mouse possition
 	//std::cout << "Mouse position: " << sf::Mouse::getPosition().x << " <----> " << sf::Mouse::getPosition().y << "\n";
 
+	if (!this->endGame)
+	{
+		this->updateMousePositions();
 
-	this->updateMousePositions();
+		this->updateText();
 
-	this->updateEnemies();
+		this->updateEnemies();
+	}
+
+	// warunek koncz¹cy grê/End Game Condition
+	if (this->health <= 0)
+		this->endGame = true;
 
 	// Relative to the window
 	/*
@@ -171,12 +221,12 @@ void Game::update()
 		*/
 }
 
-void Game::renderEnemies()
+void Game::renderEnemies(sf::RenderTarget& target)
 {
 	//Rendering all the enemies
 	for (auto& e : this->enemies)
 	{
-		this->window->draw(e);
+		target.draw(e);
 	}
 }
 
@@ -198,7 +248,9 @@ void Game::render()
 	this->window->clear(sf::Color(0, 0, 0, 0));
 
 	//Draw game objects
-	this->renderEnemies();
+	this->renderEnemies(*this->window);
+
+	this->renderText(*this->window);
 
 	this->window->draw(this->enemy);
 
@@ -210,6 +262,11 @@ void Game::render()
 const bool Game::windowIsRunning() const
 {
 	return this->window->isOpen();
+}
+
+const bool Game::getEndGame() const
+{
+	return this->endGame;
 }
 
 void Game::poolEvents()
